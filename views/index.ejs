@@ -1,0 +1,70 @@
+<header class="navbar">
+  <div class="navbar-inner">
+    <div class="brand">WebSocket Chat Experiment</div>
+  </div>
+</header>
+<section class="container" ng-controller="WebSocketChatCtrl">
+  <div class="row">
+    <div class="span3">
+      <div id="attendee">
+        <table class="table table-condensed" style="max-height: 500px; overflow-y: scroll;">
+          <thead>
+            <tr>
+              <th>Attendees</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="form-inline">
+                <input type="text" id="name" ng-model="name" ng-disabled="!session_standby" placeholder="Enter your name" style="width: 110px;" />
+                <input type="button" id="connect" class="btn" ng-class="{'btn-primary':session_standby, 'btn-danger':!session_standby}" value="{{session_button}}" ng-click="toggle_session()" />
+              </td>
+            </tr>
+            <tr ng-repeat="attendee in attendees">
+              <td>{{attendee.name}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="span9">
+      <div id="conversation" class="well">
+        <div>
+          <div id="message" class="form-inline">
+            <div class="alert" ng-class="{'alert-success':notification_type=='success', 'alert-info':notification_type=='info', 'alert-error':notification_type=='error'}" ng-show="notification" style="position:absolute; margin-left:230px; margin-top:-5px;">
+              {{notification}}
+            </div>
+            <input type="text" id="text" value="" ng-model="message" ng-disabled="session_standby" placeholder="Type text and enter to send a text message" />
+          </div>
+          <div style="height: 300px; overflow-y: scroll; margin-top:12px;">
+            <table class="table table-condensed">
+              <colgroup>
+                <col class="span1">
+                <col class="span2">
+                <col class="span5">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Name</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="message in messages">
+                  <td>{{message.datetime|date:'HH:mm:ss'}}</td>
+                  <td>{{message.name}}</td>
+                  <td ng-class="{muted:message.type=='start_music'}">{{message.message}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <footer class="footer">
+    <p>Powered by <a href="http://nodejs.org/" target="_blank">node.js</a>, <a href="https://github.com/einaros/ws" target="_blank">ws</a>, <a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html" target="_blank">Web Audio API</a> and <a href="http://dev.w3.org/html5/websockets/" target="blank">WebSocket</a>. Developed by <a href="http://profiles.google.com/agektmr" target="_blank">Eiji Kitamura</a> (<a href="http://twitter.com/agektmr" target="_blank">@agektmr</a>). Source code can be found on <a href="https://github.com/agektmr/AudioStreamer" target="_blank">github</a>.</p>
+  </footer>
+</section>
