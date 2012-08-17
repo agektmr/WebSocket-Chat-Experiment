@@ -75,11 +75,13 @@ SessionManager.prototype = {
 };
 
 app.listen(3010, function() {
-  var ws = new WebSocketServer({server:app});
-  var session = new SessionManager();
+  var ws = new WebSocketServer({server:app}),
+      session = new SessionManager();
 
   // Start accepting WebSocket connection
   ws.on('connection', function(socket) {
+    var interval = null;
+
     // When a message is received
     socket.on('message', function(req) {
 console.log('received', req);
@@ -122,7 +124,7 @@ console.log('received', req);
       console.log('Error: '+e.message);
     });
 
-    var interval = setInterval(function() {
+    interval = setInterval(function() {
       console.log('sending heartbeat.');
       socket.ping();
     }, 30*1000);
@@ -130,8 +132,8 @@ console.log('received', req);
 
   // Broadcast a message
   var broadcast = function(msg) {
+    msg = JSON.stringify(msg);
     session.connections.forEach(function(user) {
-      msg = JSON.stringify(msg);
 console.log('sending', msg);
       user.socket.send(msg);
     });

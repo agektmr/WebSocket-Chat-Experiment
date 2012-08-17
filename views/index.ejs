@@ -31,17 +31,17 @@
       <div id="conversation" class="well">
         <div>
           <div id="message" class="form-inline">
-            <div class="alert" ng-class="{'alert-success':notification_type=='success', 'alert-info':notification_type=='info', 'alert-error':notification_type=='error'}" ng-show="notification" style="position:absolute; margin-left:230px; margin-top:-5px;">
+            <div class="alert" ng-class="{'alert-success':notification_type=='success', 'alert-info':notification_type=='info', 'alert-error':notification_type=='error'}" ng-show="notification" style="position:absolute; margin-left:370px; margin-top:-5px;">
               {{notification}}
             </div>
-            <input type="text" id="text" value="" ng-model="message" ng-disabled="session_standby" placeholder="Type text and enter to send a text message" />
+            <input type="text" id="text" ng-model="message" ng-disabled="session_standby" placeholder="Type text and enter to send a text message" style="width:350px;" />
           </div>
-          <div style="height: 300px; overflow-y: scroll; margin-top:12px;">
+          <div style="height: 300px; margin-top:12px; overflow-y: scroll;">
             <table class="table table-condensed">
               <colgroup>
-                <col class="span1">
                 <col class="span2">
-                <col class="span5">
+                <col class="span2">
+                <col class="span10">
               </colgroup>
               <thead>
                 <tr>
@@ -51,7 +51,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr ng-repeat="message in messages">
+                <tr ng-repeat="message in messages" style="word-break:break-all;">
                   <td>{{message.datetime|date:'HH:mm:ss'}}</td>
                   <td>{{message.name}}</td>
                   <td ng-class="{muted:message.type=='start_music'}">{{message.message}}</td>
