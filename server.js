@@ -39,13 +39,11 @@ app.configure('production', function() {
 app.get('/', routes.index);
 
 var SessionManager = function() {
-  this.user_index = 0;
   this.connections = [];
 };
 SessionManager.prototype = {
   addUser: function(name, socket) {
     var user = {
-      user_id: this.user_index++,
       name: name || 'No Name',
       socket: socket
     };
@@ -65,10 +63,7 @@ SessionManager.prototype = {
   getUserList: function() {
     var list = [];
     this.connections.forEach(function(user) {
-      list.push({
-        user_id: user.user_id,
-        name: user.name
-      });
+      list.push(user.name);
     });
     return list;
   }
@@ -96,7 +91,9 @@ console.log('received', req);
           };
           break;
         case 'message':
-          msg.datetime = (new Date()).getTime();
+          // set UTC time
+          var now = new Date();
+          msg.datetime = now.getTime() + (now.getTimezoneOffset()*60*1000);
           break;
         default:
           break;

@@ -43,16 +43,16 @@ var WebSocketChatCtrl = function($scope) {
     }
   };
   $scope.onopen = function() {
+    $scope.name = $scope.name || 'No name';
     var msg = {
       name: $scope.name,
       type: 'connection',
-      message: ''
+      data: ''
     };
     $scope.chat.send(JSON.stringify(msg));
     $scope.notify('Welcome, '+$scope.name+'!', 'success');
   };
   $scope.onclose = function() {
-    $scope.messages = [];
     $scope.attendees = [];
     $scope.session_standby = true;
     $scope.session_button = 'connect';
@@ -69,6 +69,8 @@ var WebSocketChatCtrl = function($scope) {
         $scope.attendees = msg.message;
         break;
       case 'message':
+        // set local time
+        msg.datetime = msg.datetime - ((new Date(msg.datetime)).getTimezoneOffset()*60*1000);
         $scope.messages.unshift(msg);
         break;
       default:
@@ -82,7 +84,7 @@ var WebSocketChatCtrl = function($scope) {
       var msg = {
         'name': $scope.name,
         'type': 'message',
-        'message': message
+        'data': message
       };
       $scope.chat.send(JSON.stringify(msg));
       $scope.message = '';
