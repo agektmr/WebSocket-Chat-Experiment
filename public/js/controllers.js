@@ -22,7 +22,7 @@ var WS_HOST = window.location.href.replace(/(http|https)(:\/\/.*?)\//, 'ws$2');
 var WebSocketChatCtrl = function($scope) {
   $scope.session_standby = true;
   $scope.session_button = 'connect';
-  $scope.name = '';  
+  $scope.name = '';
   $scope.attendees = [];
   $scope.message = '';
   $scope.messages = [];
@@ -45,9 +45,8 @@ var WebSocketChatCtrl = function($scope) {
   $scope.onopen = function() {
     $scope.name = $scope.name || 'No name';
     var msg = {
-      name: $scope.name,
       type: 'connection',
-      data: ''
+      data: $scope.name
     };
     $scope.chat.send(JSON.stringify(msg));
     $scope.notify('Welcome, '+$scope.name+'!', 'success');
@@ -66,7 +65,7 @@ var WebSocketChatCtrl = function($scope) {
     var msg = JSON.parse(req.data);
     switch (msg.type) {
       case 'connection':
-        $scope.attendees = msg.message;
+        $scope.attendees = msg.data;
         break;
       case 'message':
         // set local time
@@ -82,9 +81,8 @@ var WebSocketChatCtrl = function($scope) {
     var message = $scope.message;
     if (message.length > 0) {
       var msg = {
-        'name': $scope.name,
-        'type': 'message',
-        'data': message
+        type: 'message',
+        data: message
       };
       $scope.chat.send(JSON.stringify(msg));
       $scope.message = '';

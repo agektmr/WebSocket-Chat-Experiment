@@ -43,12 +43,23 @@ var SessionManager = function() {
 };
 SessionManager.prototype = {
   addUser: function(name, socket) {
+    // Check if name is conflicting
+    this.connections.forEach(function(user) {
+      if (name === user.name) name = name+'_';
+    });
     var user = {
-      name: name || 'No Name',
+      name: name,
       socket: socket
     };
     this.connections.push(user);
     return true;
+  },
+  getUser: function(socket) {
+    for (var i = 0; i < this.connections.length; i++) {
+      if (socket == this.connections[i].socket)
+        return this.connections[i];
+    }
+    return null;
   },
   removeUser: function(socket) {
     for (var i = 0; i < this.connections.length; i++) {
@@ -83,14 +94,17 @@ console.log('received', req);
       var msg = JSON.parse(req);
       switch (msg.type) {
         case 'connection':
-          session.addUser(msg.name, socket);
+          session.addUser(msg.data, socket);
           var list = session.getUserList();
           msg = {
             type: 'connection',
-            message: list
+            data: list
           };
           break;
         case 'message':
+          var user = session.getUser(socket);
+          // Override username
+          msg.name = user.name;
           // set UTC time
           var now = new Date();
           msg.datetime = now.getTime() + (now.getTimezoneOffset()*60*1000);
@@ -111,7 +125,7 @@ console.log('received', req);
       var list = session.getUserList();
       var msg = {
         type: 'connection',
-        message: list
+        data: list
       };
       broadcast(msg);
     });
