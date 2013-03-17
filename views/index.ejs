@@ -36,7 +36,7 @@
           </div>
           <input type="text" id="text" ng-model="message" ng-disabled="session_standby" placeholder="Type text and enter to send a text message" style="width:350px;" />
         </div>
-        <div style="height: 300px; margin-top:12px; overflow-y: scroll;">
+        <div style="height: 300px; margin-top:12px; overflow-y: scroll;" id="chat_area">
           <table class="table table-condensed">
             <colgroup>
               <col class="span2">
@@ -54,7 +54,12 @@
               <tr ng-repeat="message in messages" style="word-break:break-all;">
                 <td>{{message.datetime|date:'HH:mm:ss'}}</td>
                 <td>{{message.name}}</td>
-                <td ng-class="{muted:message.type=='start_music'}">{{message.data}}</td>
+                <td ng-class="{muted:message.type=='start_music'}">
+                  <div>{{message.data}}</div>
+                  <img src="{{message.imgsrc}}" alt="" ng-show="message.imgsrc">
+                  <audio src="{{message.audiosrc}}" ng-show="message.audiosrc" controls></audio>
+                  <video src="{{message.videosrc}}" ng-show="message.videosrc" controls style="max-width: 100%;"></video>
+                </td>
               </tr>
             </tbody>
           </table>

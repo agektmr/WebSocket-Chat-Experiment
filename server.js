@@ -19,6 +19,7 @@ Author: Eiji Kitamura (agektmr@gmail.com)
 
 var express = require('express'),
     routes  = require('./routes'),
+    binarize = require('binarize.js'),
     WebSocketServer = require('ws').Server;
 
 var app = module.exports = express.createServer();
@@ -45,6 +46,7 @@ SessionManager.prototype = {
   addUser: function(name, socket) {
     // Check if name is conflicting
     this.connections.forEach(function(user) {
+      // If name is conflicting, append "_"
       if (name === user.name) name = name+'_';
     });
     var user = {
@@ -68,7 +70,7 @@ SessionManager.prototype = {
         this.connections.splice(i, 1);
         return true;
       }
-    };
+    }
     return false;
   },
   getUserList: function() {
@@ -90,29 +92,34 @@ app.listen(3010, function() {
 
     // When a message is received
     socket.on('message', function(req) {
-console.log('received', req);
-      var msg = JSON.parse(req);
-      switch (msg.type) {
-        case 'connection':
-          session.addUser(msg.data, socket);
-          var list = session.getUserList();
-          msg = {
-            type: 'connection',
-            data: list
-          };
-          break;
-        case 'message':
-          var user = session.getUser(socket);
-          // Override username
-          msg.name = user.name;
-          // set UTC time
-          var now = new Date();
-          msg.datetime = now.getTime() + (now.getTimezoneOffset()*60*1000);
-          break;
-        default:
-          break;
-      }
-      broadcast(msg);
+      binarize.unpack(req, function(msg) {
+        switch (msg.type) {
+          // If message type is "connection"
+          case 'connection':
+            // add the user to session list
+            session.addUser(msg.data, socket);
+            // prepare to broadcast attendee list
+            var list = session.getUserList();
+            msg = {
+              type: 'connection',
+              data: list
+            };
+            break;
+          // If message type is "message"
+          case 'message':
+            // get user information
+            var user = session.getUser(socket);
+            // append username
+            msg.name = user.name;
+            // set UTC time
+            var now = new Date();
+            msg.datetime = now.getTime() + (now.getTimezoneOffset()*60*1000);
+            break;
+          default:
+            break;
+        }
+        broadcast(msg);
+      });
     });
 
     // When the connection is closed
@@ -143,10 +150,10 @@ console.log('received', req);
 
   // Broadcast a message
   var broadcast = function(msg) {
-    msg = JSON.stringify(msg);
-    session.connections.forEach(function(user) {
-console.log('sending', msg);
-      user.socket.send(msg);
+    binarize.pack(msg, function(binary) {
+      session.connections.forEach(function(user) {
+        user.socket.send(binary, {binary:true, mask:false});
+      });
     });
   };
 });

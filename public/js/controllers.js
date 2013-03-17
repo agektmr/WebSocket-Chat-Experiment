@@ -28,6 +28,13 @@ var WebSocketChatCtrl = function($scope) {
   $scope.messages = [];
   $scope.notification = '';
   $scope.notification_type = 'info';
+
+  var send = function(msg) {
+    binarize.pack(msg, function(binary) {
+      $scope.chat.send(binary);
+    });
+  };
+
   $scope.toggle_session = function toggle_session() {
     if (!$scope.session_standby) {
       $scope.chat.close();
@@ -38,6 +45,7 @@ var WebSocketChatCtrl = function($scope) {
       $scope.chat.onmessage = $scope.onmessage;
       $scope.chat.onclose = $scope.onclose;
       $scope.chat.onerror = $scope.onerror;
+      $scope.chat.binaryType = 'arraybuffer';
       $scope.session_standby = false;
       $scope.session_button = 'disconnect';
     }
@@ -48,7 +56,7 @@ var WebSocketChatCtrl = function($scope) {
       type: 'connection',
       data: $scope.name
     };
-    $scope.chat.send(JSON.stringify(msg));
+    send(msg);
     $scope.notify('Welcome, '+$scope.name+'!', 'success');
   };
   $scope.onclose = function() {
@@ -62,20 +70,36 @@ var WebSocketChatCtrl = function($scope) {
 
   };
   $scope.onmessage = function(req) {
-    var msg = JSON.parse(req.data);
-    switch (msg.type) {
-      case 'connection':
-        $scope.attendees = msg.data;
-        break;
-      case 'message':
-        // set local time
-        msg.datetime = msg.datetime - ((new Date(msg.datetime)).getTimezoneOffset()*60*1000);
-        $scope.messages.unshift(msg);
-        break;
-      default:
-        return;
-    }
-    $scope.$apply();
+    binarize.unpack(req.data, function(msg) {
+      switch (msg.type) {
+        case 'connection':
+          $scope.attendees = msg.data;
+          break;
+        case 'message':
+          // set local time
+          msg.datetime = msg.datetime - ((new Date(msg.datetime)).getTimezoneOffset()*60*1000);
+          msg.imgsrc = '';
+          msg.audiosrc = '';
+          msg.videosrc = '';
+          if (msg.data instanceof Blob) {
+            if (msg.data.type.indexOf('image') === 0) {
+              msg.imgsrc = URL.createObjectURL(msg.data);
+              msg.data = 'received an image';
+            } else if (msg.data.type.indexOf('audio') === 0) {
+              msg.audiosrc = URL.createObjectURL(msg.data);
+              msg.data = 'received an audio';
+            } else if (msg.data.type.indexOf('video') === 0) {
+              msg.videosrc = URL.createObjectURL(msg.data);
+              msg.data = 'received a video';
+            }
+          }
+          $scope.messages.unshift(msg);
+          break;
+        default:
+          return;
+      }
+      $scope.$apply();
+    });
   };
   $scope.send_message = function() {
     var message = $scope.message;
@@ -84,7 +108,23 @@ var WebSocketChatCtrl = function($scope) {
         type: 'message',
         data: message
       };
-      $scope.chat.send(JSON.stringify(msg));
+      send(msg);
+      $scope.message = '';
+      $scope.$apply();
+    }
+  };
+  $scope.send_image = function(e) {
+    chat_area.style.backgroundColor = '';
+    e.preventDefault();
+    var file = e.dataTransfer.files[0];
+    if (file.type.indexOf('image') === 0 ||
+        file.type.indexOf('audio') === 0 ||
+        file.type.indexOf('video') === 0) {
+      var msg = {
+        type: 'message',
+        data: file
+      };
+      send(msg);
       $scope.message = '';
       $scope.$apply();
     }
@@ -101,6 +141,24 @@ var WebSocketChatCtrl = function($scope) {
       }, 3000);
     }
   };
+
+  var chat_area = document.querySelector('#chat_area');
+  chat_area.ondragenter = function(e) {
+    if ($scope.session_standby) return;
+    chat_area.style.backgroundColor = '#eee';
+    e.preventDefault();
+  };
+  chat_area.ondragleave = function(e) {
+    if ($scope.session_standby) return;
+    chat_area.style.backgroundColor = '';
+    e.preventDefault();
+  };
+  chat_area.ondragover = function(e) {
+    if ($scope.session_standby) return;
+    chat_area.style.backgroundColor = '#eee';
+    e.preventDefault();
+  };
+  chat_area.ondrop = $scope.send_image;
 
   document.querySelector('#text').onkeydown = function(e) {
     if (e.keyCode == 13) {
